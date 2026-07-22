@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Term Sorter — Loragica</title>
+<style>
+  :root {
+    --off-white: #F5F5F3;
+    --black: #0A0A0A;
+    --dark-gray: #1C1C1C;
+    --mid-gray: #555555;
+    --light-gray: #AAAAAA;
+    --white: #FFFFFF;
+    --grid-line: #E2E2E2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--off-white);
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--dark-gray);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 720px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    padding: 40px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--mid-gray);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: var(--black);
+    margin-bottom: 6px;
+  }
+
+  .instruction {
+    font-size: 14px;
+    color: var(--mid-gray);
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .expr-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+
+  .expr-input-row input {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--light-gray);
+    background: var(--off-white);
+    color: var(--black);
+    letter-spacing: 0.5px;
+  }
+
+  .expr-input-row input:focus {
+    outline: none;
+    border-color: var(--black);
+  }
+
+  .btn {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 18px;
+    background: var(--black);
+    color: var(--off-white);
+    border: 1px solid var(--black);
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+
+  .btn:hover { background: var(--dark-gray); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--black);
+  }
+
+  .btn-outline:hover { background: var(--off-white); }
+
+  .pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 64px;
+    padding: 16px;
+    border: 1px dashed var(--light-gray);
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .pool.empty::before {
+    content: "Semua suku sudah dikelompokkan";
+    font-size: 13px;
+    color: var(--light-gray);
+    font-style: italic;
+  }
+
+  .term {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 8px 16px;
+    background: var(--off-white);
+    border: 1px solid var(--black);
+    color: var(--black);
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .term:active { cursor: grabbing; }
+
+  .term.dragging {
+    opacity: 0.4;
+  }
+
+  .term.wrong-shake {
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .zones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .zone {
+    border: 2px solid;
+    min-height: 140px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .zone-x {
+    border-color: var(--black);
+  }
+
+  .zone-const {
+    border-color: var(--mid-gray);
+  }
+
+  .zone-label {
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .zone-x .zone-label { color: var(--black); }
+  .zone-const .zone-label { color: var(--mid-gray); }
+
+  .zone-terms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+    align-content: flex-start;
+  }
+
+  .zone.drag-over {
+    background: var(--off-white);
+  }
+
+  .zone-const .term {
+    border-color: var(--mid-gray);
+    color: var(--mid-gray);
+  }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid var(--grid-line);
+  }
+
+  .result-label {
+    font-size: 13px;
+    color: var(--mid-gray);
+  }
+
+  .result-value {
+    font-family: 'Courier New', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--black);
+  }
+
+  .result-value .const-part {
+    color: var(--mid-gray);
+  }
+
+  .status {
+    font-size: 13px;
+    margin-top: 4px;
+    min-height: 18px;
+  }
+
+  .status.correct { color: var(--black); }
+  .status.pending { color: var(--light-gray); }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 480px) {
+    .zones { grid-template-columns: 1fr; }
+    .stage { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="eyebrow">Modul 1.1c — Playground</div>
+  <h1>Term Sorter</h1>
+  <p class="instruction">Seret tiap suku ke kelompok yang sesuai: suku-x di kotak hitam, konstanta di kotak abu-abu. Sistem menghitung hasil penyederhanaan otomatis.</p>
+
+  <div class="expr-input-row">
+    <input type="text" id="exprInput" value="3x+5+2x-1" placeholder="contoh: 3x+5+2x-1" />
+    <button class="btn" id="loadBtn">Muat</button>
+  </div>
+
+  <div class="pool" id="pool"></div>
+
+  <div class="zones">
+    <div class="zone zone-x" id="zoneX" data-type="x">
+      <div class="zone-label">Suku x</div>
+      <div class="zone-terms" id="zoneXTerms"></div>
+    </div>
+    <div class="zone zone-const" id="zoneConst" data-type="const">
+      <div class="zone-label">Konstanta</div>
+      <div class="zone-terms" id="zoneConstTerms"></div>
+    </div>
+  </div>
+
+  <div class="result-row">
+    <div>
+      <div class="result-label">Hasil penyederhanaan</div>
+      <div class="status pending" id="statusText">Kelompokkan semua suku dulu</div>
+    </div>
+    <div class="result-value" id="resultValue">—</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-outline" id="resetBtn">Ulangi</button>
+  </div>
+</div>
+
+<script>
+  const pool = document.getElementById('pool');
+  const zoneXTerms = document.getElementById('zoneXTerms');
+  const zoneConstTerms = document.getElementById('zoneConstTerms');
+  const zoneX = document.getElementById('zoneX');
+  const zoneConst = document.getElementById('zoneConst');
+  const resultValue = document.getElementById('resultValue');
+  const statusText = document.getElementById('statusText');
+  const exprInput = document.getElementById('exprInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let terms = [];
+
+  function parseExpression(str) {
+    const cleaned = str.replace(/\s+/g, '');
+    const tokens = cleaned.match(/[+-]?[^+-]+/g) || [];
+    return tokens.map((tok, i) => {
+      const isX = tok.includes('x');
+      let coeff;
+      if (isX) {
+        let numPart = tok.replace('x', '');
+        if (numPart === '' || numPart === '+') coeff = 1;
+        else if (numPart === '-') coeff = -1;
+        else coeff = parseInt(numPart, 10);
+      } else {
+        coeff = parseInt(tok, 10);
+      }
+      return { id: 'term-' + i, type: isX ? 'x' : 'const', value: coeff, label: tok, placed: false };
+    });
+  }
+
+  function renderPool() {
+    pool.innerHTML = '';
+    const unplaced = terms.filter(t => !t.placed);
+    pool.classList.toggle('empty', unplaced.length === 0);
+    unplaced.forEach(t => pool.appendChild(makeTermEl(t)));
+  }
+
+  function makeTermEl(t) {
+    const el = document.createElement('div');
+    el.className = 'term';
+    el.textContent = t.label;
+    el.draggable = true;
+    el.dataset.id = t.id;
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', t.id);
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    return el;
+  }
+
+  function renderZones() {
+    zoneXTerms.innerHTML = '';
+    zoneConstTerms.innerHTML = '';
+    terms.filter(t => t.placed && t.type === 'x').forEach(t => zoneXTerms.appendChild(makeTermEl(t)));
+    terms.filter(t => t.placed && t.type === 'const').forEach(t => zoneConstTerms.appendChild(makeTermEl(t)));
+  }
+
+  function setupZoneDnD(zoneEl, expectedType) {
+    zoneEl.addEventListener('dragover', e => {
+      e.preventDefault();
+      zoneEl.classList.add('drag-over');
+    });
+    zoneEl.addEventListener('dragleave', () => zoneEl.classList.remove('drag-over'));
+    zoneEl.addEventListener('drop', e => {
+      e.preventDefault();
+      zoneEl.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const term = terms.find(t => t.id === id);
+      if (!term) return;
+
+      if (term.type === expectedType) {
+        term.placed = true;
+        renderPool();
+        renderZones();
+        checkComplete();
+      } else {
+        const draggedEl = document.querySelector(`[data-id="${id}"]`);
+        if (draggedEl) {
+          draggedEl.classList.add('wrong-shake');
+          setTimeout(() => draggedEl.classList.remove('wrong-shake'), 400);
+        }
+      }
+    });
+  }
+
+  setupZoneDnD(zoneX, 'x');
+  setupZoneDnD(zoneConst, 'const');
+
+  pool.addEventListener('dragover', e => e.preventDefault());
+  pool.addEventListener('drop', e => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const term = terms.find(t => t.id === id);
+    if (term) {
+      term.placed = false;
+      renderPool();
+      renderZones();
+      checkComplete();
+    }
+  });
+
+  function checkComplete() {
+    const allPlaced = terms.every(t => t.placed);
+    if (allPlaced) {
+      const sumX = terms.filter(t => t.type === 'x').reduce((a, t) => a + t.value, 0);
+      const sumConst = terms.filter(t => t.type === 'const').reduce((a, t) => a + t.value, 0);
+
+      let parts = [];
+      if (sumX !== 0) {
+        const xLabel = (sumX === 1 ? 'x' : sumX === -1 ? '-x' : sumX + 'x');
+        parts.push(`<span>${xLabel}</span>`);
+      }
+      if (sumConst !== 0 || sumX === 0) {
+        const sign = sumConst >= 0 && parts.length > 0 ? ' + ' : (sumConst < 0 ? ' - ' : '');
+        const absVal = Math.abs(sumConst);
+        if (parts.length > 0) {
+          parts.push(`<span class="const-part">${sign}${absVal}</span>`);
+        } else {
+          parts.push(`<span class="const-part">${sumConst}</span>`);
+        }
+      }
+      resultValue.innerHTML = parts.join('');
+      statusText.textContent = 'Benar — semua suku sejenis sudah digabung';
+      statusText.className = 'status correct';
+    } else {
+      resultValue.textContent = '—';
+      statusText.textContent = 'Kelompokkan semua suku dulu';
+      statusText.className = 'status pending';
+    }
+  }
+
+  function loadExpression(str) {
+    terms = parseExpression(str);
+    renderPool();
+    renderZones();
+    checkComplete();
+  }
+
+  loadBtn.addEventListener('click', () => loadExpression(exprInput.value));
+  resetBtn.addEventListener('click', () => loadExpression(exprInput.value));
+  exprInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadExpression(exprInput.value);
+  });
+
+  loadExpression(exprInput.value);
+</script>
+
+</body>
+</html>
