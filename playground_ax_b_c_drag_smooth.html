@@ -1,0 +1,179 @@
+<h2 class="sr-only">Playground ax + b = c: seret handle a, b, c dan titik x; grafik dan neraca bergerak mulus bersamaan sampai seimbang.</h2>
+<style>
+.pgx{position:relative;background:#F5F5F3;background-image:radial-gradient(#E2E2E2 1.1px,transparent 1.1px);background-size:16px 16px;border:1.5px solid #0A0A0A;border-radius:14px;padding:16px 18px;font-family:var(--font-mono);color:#0A0A0A;}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.eqbig{font-size:22px;letter-spacing:.03em;}
+.eqbig b{font-weight:500;}
+.pill{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#555;padding:5px 12px;border:1.5px solid #AAA;border-radius:999px;white-space:nowrap;transition:background .3s ease,color .3s ease,border-color .3s ease;}
+.pill.bal{background:#0A0A0A;color:#F5F5F3;border-color:#0A0A0A;}
+.vals{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid #0A0A0A;border-radius:10px;overflow:hidden;margin:14px 0 6px;}
+.vals .cell{padding:8px 10px;text-align:center;border-right:1px solid #0A0A0A;}
+.vals .cell:last-child{border-right:none;}
+.vals .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#AAA;}
+.vals .v{font-size:20px;font-weight:500;margin-top:2px;}
+.svgwrap{width:100%;}
+.svgwrap svg{width:100%;height:auto;display:block;}
+[data-drag]{cursor:grab;transition:fill .2s ease;}
+[data-drag]:active{cursor:grabbing;}
+.rule{height:1.5px;background:#0A0A0A;margin:6px 2px 8px;opacity:.14;}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;letter-spacing:.01em;color:#555;font-family:var(--font-sans);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.sw{width:20px;height:0;border-top:2px solid #0A0A0A;}
+.sw.dash{border-top:2px dashed #0A0A0A;}
+.sw.dot{border-top:2px dotted #555;}
+#reset{font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;font-size:11px;width:auto;padding:0 14px;border-color:#0A0A0A;color:#0A0A0A;}
+</style>
+<div class="pgx" id="pgx">
+  <div class="top">
+    <div class="eqbig"><b id="ea">1</b>x + <b id="eb">7</b> = <b id="ec">3</b></div>
+    <div class="pill" id="stat">SERET TITIK X UNTUK SEIMBANG</div>
+  </div>
+
+  <div class="vals">
+    <div class="cell"><div class="k">a</div><div class="v" id="va">1</div></div>
+    <div class="cell"><div class="k">b</div><div class="v" id="vb">7</div></div>
+    <div class="cell"><div class="k">c</div><div class="v" id="vc">3</div></div>
+    <div class="cell"><div class="k">x</div><div class="v" id="vx">0</div></div>
+  </div>
+
+  <div class="svgwrap">
+    <svg id="scale" viewBox="0 0 640 176" xmlns="http://www.w3.org/2000/svg">
+      <line id="beam" x1="150" y1="50" x2="490" y2="50" stroke="#0A0A0A" stroke-width="6" stroke-linecap="round"/>
+      <line id="sL1" stroke="#555" stroke-width="1.5"/><line id="sL2" stroke="#555" stroke-width="1.5"/>
+      <line id="sR1" stroke="#555" stroke-width="1.5"/><line id="sR2" stroke="#555" stroke-width="1.5"/>
+      <line x1="320" y1="50" x2="320" y2="148" stroke="#555" stroke-width="3.5"/>
+      <polygon points="301,148 339,148 320,52" fill="#555" fill-opacity="0.10" stroke="#555" stroke-width="2"/>
+      <line x1="291" y1="148" x2="349" y2="148" stroke="#0A0A0A" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="320" cy="50" r="5" fill="#0A0A0A"/>
+      <g id="panLg"><path id="bowlL" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+        <text id="capL" text-anchor="middle" font-size="12" fill="#AAA" font-family="monospace" letter-spacing="1">a·x + b</text>
+        <text id="wL" text-anchor="middle" font-size="21" fill="#0A0A0A" font-family="monospace" font-weight="500">8</text></g>
+      <g id="panRg"><path id="bowlR" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+        <text id="capR" text-anchor="middle" font-size="12" fill="#AAA" font-family="monospace" letter-spacing="1">c</text>
+        <text id="wR" text-anchor="middle" font-size="21" fill="#0A0A0A" font-family="monospace" font-weight="500">3</text></g>
+    </svg>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="svgwrap">
+    <svg id="graph" viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="plot"><rect x="44" y="14" width="552" height="254"/></clipPath></defs>
+      <g id="ticks"></g>
+      <line id="axx" stroke="#AAA" stroke-width="1.5"/>
+      <line id="axy" stroke="#AAA" stroke-width="1.5"/>
+      <g clip-path="url(#plot)">
+        <line id="targetc" data-drag="c" stroke="#0A0A0A" stroke-width="2" stroke-dasharray="7 5"/>
+        <line id="probe" data-drag="x" stroke="#555" stroke-width="2" stroke-dasharray="2 4"/>
+        <line id="line" data-drag="b" stroke="#0A0A0A" stroke-width="3"/>
+      </g>
+      <circle id="sol" r="6" fill="#F5F5F3" stroke="#0A0A0A" stroke-width="2.5"/>
+      <g id="handles">
+        <rect id="hA" data-drag="a" width="16" height="16" rx="3" fill="#0A0A0A"/>
+        <rect id="hB" data-drag="b0" width="16" height="16" rx="3" fill="#0A0A0A"/>
+        <rect id="hC" data-drag="c" width="16" height="16" rx="3" fill="#F5F5F3" stroke="#0A0A0A" stroke-width="2"/>
+        <rect id="hX" data-drag="x" width="16" height="16" rx="3" fill="#555"/>
+      </g>
+      <text id="lblA" font-size="11" fill="#555" font-family="monospace">a</text>
+      <text id="lblB" font-size="11" fill="#555" font-family="monospace">b</text>
+      <text id="lblC" font-size="11" fill="#555" font-family="monospace">c</text>
+      <text id="lblX" font-size="11" fill="#555" font-family="monospace">x</text>
+      <text id="sollbl" font-size="12" fill="#0A0A0A" font-family="monospace" text-anchor="middle" font-weight="500"></text>
+    </svg>
+  </div>
+
+  <div class="foot">
+    <div class="legend">
+      <span><span class="sw"></span> a·x + b</span>
+      <span><span class="sw dash"></span> target c</span>
+      <span><span class="sw dot"></span> tebakan x</span>
+    </div>
+    <button id="reset">Acak soal</button>
+  </div>
+</div>
+<script>
+(function(){
+  var target={a:1,b:7,c:3,g:0}, disp={a:1,b:7,c:3,g:0}, EASE=0.22;
+  var graph=document.getElementById('graph'), GVB=[640,300];
+  function X(x){return 44+(x+6)/12*552;}
+  function Y(y){return 268-(y+8)/16*254;}
+  function iX(px){return (px-44)/552*12-6;}
+  function iY(py){return (268-py)/254*16-8;}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function snap(v,s){return Math.round(v/s)*s;}
+  function r1(v){var n=Math.round(v*10)/10;return Number.isInteger(n)?n.toFixed(0):n.toString();}
+  function set(id,a){var e=document.getElementById(id);for(var k in a)e.setAttribute(k,a[k]);}
+  function txt(id,t){var e=document.getElementById(id);if(e.textContent!==t)e.textContent=t;}
+  function toVB(cx,cy){var r=graph.getBoundingClientRect();return [(cx-r.left)/r.width*GVB[0],(cy-r.top)/r.height*GVB[1]];}
+  function bowl(cx,cy){return 'M '+(cx-34)+' '+(cy-14)+' L '+(cx+34)+' '+(cy-14)+' L '+(cx+22)+' '+(cy+14)+' L '+(cx-22)+' '+(cy+14)+' Z';}
+
+  (function(){var g=document.getElementById('ticks'),h='';
+    [-4,-2,2,4].forEach(function(x){h+='<line x1="'+X(x)+'" y1="'+(Y(0)-4)+'" x2="'+X(x)+'" y2="'+(Y(0)+4)+'" stroke="#AAA" stroke-width="1.2"/>'
+      +'<text x="'+X(x)+'" y="'+(Y(0)+16)+'" font-size="10" fill="#AAA" font-family="monospace" text-anchor="middle">'+x+'</text>';});
+    [-4,4].forEach(function(y){h+='<line x1="'+(X(0)-4)+'" y1="'+Y(y)+'" x2="'+(X(0)+4)+'" y2="'+Y(y)+'" stroke="#AAA" stroke-width="1.2"/>'
+      +'<text x="'+(X(0)-9)+'" y="'+(Y(y)+3)+'" font-size="10" fill="#AAA" font-family="monospace" text-anchor="end">'+y+'</text>';});
+    g.innerHTML=h;})();
+
+  function render(){
+    var a=disp.a,b=disp.b,c=disp.c,g=disp.g;
+    txt('ea',r1(a));txt('eb',r1(b));txt('ec',r1(c));
+    txt('va',r1(a));txt('vb',r1(b));txt('vc',r1(c));txt('vx',r1(g));
+    set('axx',{x1:X(-6),y1:Y(0),x2:X(6),y2:Y(0)});
+    set('axy',{x1:X(0),y1:Y(8),x2:X(0),y2:Y(-8)});
+    set('line',{x1:X(-6),y1:Y(a*-6+b),x2:X(6),y2:Y(a*6+b)});
+    set('targetc',{x1:X(-6),y1:Y(c),x2:X(6),y2:Y(c)});
+    set('probe',{x1:X(g),y1:Y(8),x2:X(g),y2:Y(-8)});
+    set('hA',{x:X(3)-8,y:Y(a*3+b)-8}); set('lblA',{x:X(3)+11,y:Y(a*3+b)-9});
+    set('hB',{x:X(0)-8,y:Y(b)-8});     set('lblB',{x:X(0)+11,y:Y(b)-9});
+    set('hC',{x:X(5.4)-8,y:Y(c)-8});   set('lblC',{x:X(5.4)+11,y:Y(c)-9});
+    set('hX',{x:X(g)-8,y:Y(7.2)-8});   set('lblX',{x:X(g)+11,y:Y(7.2)});
+    var xs=(c-b)/a;
+    set('sol',{cx:X(xs),cy:Y(c)}); set('sollbl',{x:X(xs),y:Y(c)-14}); txt('sollbl','x = '+r1(xs));
+    var wl=a*g+b, wr=c, diff=wl-wr;
+    var ang=clamp(diff*2.2,-11,11)*Math.PI/180, PX=320,PY=50,L=170,S=26;
+    var dx=L*Math.cos(ang),dy=L*Math.sin(ang);
+    var lx=PX-dx,ly=PY+dy,rx=PX+dx,ry=PY-dy;
+    set('beam',{x1:lx,y1:ly,x2:rx,y2:ry});
+    set('sL1',{x1:lx,y1:ly,x2:lx-22,y2:ly+S});set('sL2',{x1:lx,y1:ly,x2:lx+22,y2:ly+S});
+    set('sR1',{x1:rx,y1:ry,x2:rx-22,y2:ry+S});set('sR2',{x1:rx,y1:ry,x2:rx+22,y2:ry+S});
+    var lcy=ly+S+16,rcy=ry+S+16;
+    set('bowlL',{d:bowl(lx,lcy)});set('bowlR',{d:bowl(rx,rcy)});
+    set('capL',{x:lx,y:lcy-20});set('wL',{x:lx,y:lcy+7});txt('wL',r1(wl));
+    set('capR',{x:rx,y:rcy-20});set('wR',{x:rx,y:rcy+7});txt('wR',r1(wr));
+    var stat=document.getElementById('stat');
+    var tdiff=(target.a*target.g+target.b)-target.c;
+    if(Math.abs(tdiff)<0.2){stat.textContent='SEIMBANG · x = '+r1((target.c-target.b)/target.a);stat.className='pill bal';set('sol',{r:7.5});}
+    else{stat.textContent=(wl>wr?'MIRING KE KIRI':'MIRING KE KANAN');stat.className='pill';set('sol',{r:6});}
+  }
+
+  function loop(){
+    var moving=false;
+    ['a','b','c','g'].forEach(function(k){
+      var d=target[k]-disp[k];
+      if(Math.abs(d)<0.0015){disp[k]=target[k];}
+      else{disp[k]+=d*EASE;moving=true;}
+    });
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  var cur=null;
+  function down(ev){var t=ev.target.closest('[data-drag]');if(!t)return;ev.preventDefault();cur=t.getAttribute('data-drag');
+    document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);move(ev);}
+  function move(ev){if(!cur)return;var p=toVB(ev.clientX,ev.clientY),x=iX(p[0]),y=iY(p[1]);
+    if(cur==='a')target.a=clamp(snap((y-disp.b)/3,0.5),0.5,3);
+    else if(cur==='b')target.b=clamp(snap(y-disp.a*x,0.5),-5,5);
+    else if(cur==='b0')target.b=clamp(snap(y,0.5),-5,5);
+    else if(cur==='c')target.c=clamp(snap(y,0.5),-5,5);
+    else if(cur==='x')target.g=clamp(snap(x,0.1),-6,6);}
+  function up(){cur=null;document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);}
+  graph.addEventListener('pointerdown',down);
+  document.getElementById('reset').onclick=function(){
+    var A=[0.5,1,1.5,2,2.5,3],V=[-4,-3,-2,-1,1,2,3,4];
+    target.a=A[Math.floor(Math.random()*A.length)];target.b=V[Math.floor(Math.random()*V.length)];
+    target.c=V[Math.floor(Math.random()*V.length)];target.g=0;};
+
+  requestAnimationFrame(loop);
+})();
+</script>

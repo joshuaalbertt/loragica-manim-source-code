@@ -113,14 +113,15 @@ class SimplifyTermsFull(Scene):
         result[2].set_color(MID_GRAY)
         result.move_to(ORIGIN)
 
+        # remaining_terms (4 elemen: 3x,2x,5,-1) ditransform HANYA ke angka/x hasil (result[0], result[2])
+        # tanda "+" sumbernya cuma satu: result[1] itu sendiri, tidak ada plus_sign terpisah
         remaining_terms = VGroup(expr[0], expr[4], expr[2], expr[6])
-        plus_sign = MathTex("+", font_size=70, color=DARK_GRAY)
-        plus_sign.move_to(ORIGIN)  # jembatan visual, posisi sama dgn result[1]
+        result_numbers = VGroup(result[0], result[2])
 
         self.play(
             FadeOut(sum_x), FadeOut(sum_c),
-            Transform(remaining_terms, result),
-            FadeIn(plus_sign),
+            Transform(remaining_terms, result_numbers),
+            FadeIn(result[1]),
             run_time=1.5
         )
         self.wait(1)
@@ -130,7 +131,7 @@ class SimplifyTermsFull(Scene):
         check.set_points_as_corners([
             [-0.15, 0, 0], [0, -0.15, 0], [0.3, 0.2, 0]
         ])
-        final_group = VGroup(remaining_terms, plus_sign)
+        final_group = VGroup(remaining_terms, result[1])
         check.next_to(final_group, RIGHT, buff=0.6)
 
         final_box = SurroundingRectangle(final_group, color=BLACK, buff=0.3)
