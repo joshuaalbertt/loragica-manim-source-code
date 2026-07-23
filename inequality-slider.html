@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inequality Slider — Loragica</title>
+<style>
+  :root {
+    --off-white: #F5F5F3;
+    --black: #0A0A0A;
+    --dark-gray: #1C1C1C;
+    --mid-gray: #555555;
+    --light-gray: #AAAAAA;
+    --grid-line: #E2E2E2;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--off-white);
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--dark-gray);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 680px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    padding: 36px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--mid-gray);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+
+  .instruction {
+    font-size: 13px;
+    color: var(--mid-gray);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  /* Equation display */
+  .equation-display {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .equation-main {
+    font-family: 'Courier New', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 8px;
+  }
+
+  /* Sliders */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .slider-group label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: var(--mid-gray);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .slider-group .value-display {
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--light-gray);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--black);
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--black);
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Sign selector */
+  .sign-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    justify-content: center;
+  }
+
+  .sign-btn {
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    width: 48px;
+    height: 36px;
+    border: 1px solid var(--light-gray);
+    background: transparent;
+    color: var(--mid-gray);
+    cursor: pointer;
+  }
+
+  .sign-btn.active {
+    border-color: var(--black);
+    background: var(--black);
+    color: var(--off-white);
+  }
+
+  /* Steps */
+  .steps {
+    border-top: 1px solid var(--grid-line);
+    padding-top: 20px;
+    margin-bottom: 24px;
+  }
+
+  .step {
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    color: var(--mid-gray);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step .label {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    min-width: 80px;
+    text-align: right;
+  }
+
+  .step .math {
+    color: var(--black);
+    font-weight: 700;
+  }
+
+  /* Flip warning */
+  .flip-warning {
+    border: 2px solid var(--black);
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .flip-warning.visible { display: flex; }
+
+  .flip-icon {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--black);
+    font-family: 'Courier New', monospace;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .flip-text {
+    font-size: 13px;
+    color: var(--black);
+    font-weight: 500;
+  }
+
+  /* Number line */
+  .numberline-container {
+    position: relative;
+    height: 80px;
+    margin: 20px 0 12px;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Result */
+  .result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--grid-line);
+  }
+
+  .result-label {
+    font-size: 12px;
+    color: var(--mid-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .result-value {
+    font-family: 'Courier New', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--black);
+  }
+
+  .no-solution {
+    color: var(--light-gray);
+    font-style: italic;
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    .controls { grid-template-columns: 1fr; }
+    .stage { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="eyebrow">Modul 1.1e — Playground</div>
+  <h1>Inequality Slider</h1>
+  <p class="instruction">Geser nilai a, b, c dan pilih tanda. Perhatikan area solusi di garis bilangan — dan kapan tanda otomatis balik.</p>
+
+  <div class="equation-display">
+    <div class="equation-main" id="eqDisplay">ax + b < c</div>
+  </div>
+
+  <div class="sign-row">
+    <button class="sign-btn active" data-sign="<">&lt;</button>
+    <button class="sign-btn" data-sign="≤">≤</button>
+    <button class="sign-btn" data-sign=">">&gt;</button>
+    <button class="sign-btn" data-sign="≥">≥</button>
+  </div>
+
+  <div class="controls">
+    <div class="slider-group">
+      <label>a (koefisien x)</label>
+      <div class="value-display" id="valA">2</div>
+      <input type="range" id="sliderA" min="-5" max="5" step="1" value="2">
+    </div>
+    <div class="slider-group">
+      <label>b (konstanta kiri)</label>
+      <div class="value-display" id="valB">3</div>
+      <input type="range" id="sliderB" min="-10" max="10" step="1" value="3">
+    </div>
+    <div class="slider-group">
+      <label>c (ruas kanan)</label>
+      <div class="value-display" id="valC">7</div>
+      <input type="range" id="sliderC" min="-10" max="10" step="1" value="7">
+    </div>
+  </div>
+
+  <div class="flip-warning" id="flipWarning">
+    <div class="flip-icon">&lt; → &gt;</div>
+    <div class="flip-text">Bagi negatif — tanda balik arah!</div>
+  </div>
+
+  <div class="steps" id="stepsContainer"></div>
+
+  <div class="numberline-container">
+    <canvas id="nlCanvas"></canvas>
+  </div>
+
+  <div class="result-row">
+    <div class="result-label">Solusi</div>
+    <div class="result-value" id="resultValue">x &lt; 2</div>
+  </div>
+</div>
+
+<script>
+  const sliderA = document.getElementById('sliderA');
+  const sliderB = document.getElementById('sliderB');
+  const sliderC = document.getElementById('sliderC');
+  const valA = document.getElementById('valA');
+  const valB = document.getElementById('valB');
+  const valC = document.getElementById('valC');
+  const eqDisplay = document.getElementById('eqDisplay');
+  const stepsContainer = document.getElementById('stepsContainer');
+  const flipWarning = document.getElementById('flipWarning');
+  const resultValue = document.getElementById('resultValue');
+  const canvas = document.getElementById('nlCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let currentSign = '<';
+
+  // Sign buttons
+  document.querySelectorAll('.sign-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sign-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSign = btn.dataset.sign;
+      update();
+    });
+  });
+
+  [sliderA, sliderB, sliderC].forEach(s => s.addEventListener('input', update));
+
+  function flipSign(sign) {
+    const map = { '<': '>', '≤': '≥', '>': '<', '≥': '≤' };
+    return map[sign] || sign;
+  }
+
+  function signToHTML(sign) {
+    return sign.replace('<', '&lt;').replace('>', '&gt;');
+  }
+
+  function fmtNum(n) {
+    return n % 1 === 0 ? n.toString() : n.toFixed(2);
+  }
+
+  function update() {
+    const a = parseInt(sliderA.value);
+    const b = parseInt(sliderB.value);
+    const c = parseInt(sliderC.value);
+
+    valA.textContent = a;
+    valB.textContent = b;
+    valC.textContent = c;
+
+    // Equation display
+    const bStr = b >= 0 ? ` + ${b}` : ` - ${Math.abs(b)}`;
+    eqDisplay.innerHTML = `${a === 1 ? '' : a === -1 ? '-' : a}x${bStr} ${signToHTML(currentSign)} ${c}`;
+
+    // Solve
+    const rhs = c - b;
+    let steps = [];
+    steps.push({ label: 'Mulai', math: `${a === 1 ? '' : a === -1 ? '-' : a}x ${signToHTML(currentSign)} ${c} - ${b >= 0 ? b : '(' + b + ')'}` });
+    steps.push({ label: 'Sederhanakan', math: `${a === 1 ? '' : a === -1 ? '-' : a}x ${signToHTML(currentSign)} ${rhs}` });
+
+    let finalSign = currentSign;
+    let solution = null;
+    let noSolution = false;
+
+    if (a === 0) {
+      // No x term — either always true or always false
+      const check = evalIneq(b, currentSign, c);
+      noSolution = !check;
+      steps.push({ label: 'a = 0', math: check ? 'Berlaku untuk semua x' : 'Tidak ada solusi' });
+    } else {
+      if (a < 0) {
+        finalSign = flipSign(currentSign);
+        steps.push({ label: 'Bagi ' + a, math: `x ${signToHTML(finalSign)} ${fmtNum(rhs / a)}` });
+      } else {
+        steps.push({ label: 'Bagi ' + a, math: `x ${signToHTML(finalSign)} ${fmtNum(rhs / a)}` });
+      }
+      solution = rhs / a;
+    }
+
+    // Show flip warning
+    if (a < 0) {
+      flipWarning.classList.add('visible');
+      flipWarning.querySelector('.flip-icon').innerHTML = `${signToHTML(currentSign)} → ${signToHTML(finalSign)}`;
+    } else {
+      flipWarning.classList.remove('visible');
+    }
+
+    // Render steps
+    stepsContainer.innerHTML = steps.map(s =>
+      `<div class="step"><span class="label">${s.label}</span><span class="math">${s.math}</span></div>`
+    ).join('');
+
+    // Result
+    if (a === 0) {
+      if (noSolution) {
+        resultValue.innerHTML = '<span class="no-solution">Tidak ada solusi</span>';
+      } else {
+        resultValue.innerHTML = 'Semua x';
+      }
+    } else {
+      resultValue.innerHTML = `x ${signToHTML(finalSign)} ${fmtNum(solution)}`;
+    }
+
+    drawNumberLine(solution, finalSign, a === 0, noSolution, a === 0 && !noSolution);
+  }
+
+  function evalIneq(left, sign, right) {
+    switch (sign) {
+      case '<': return left < right;
+      case '≤': return left <= right;
+      case '>': return left > right;
+      case '≥': return left >= right;
+    }
+  }
+
+  function drawNumberLine(val, sign, isSpecial, noSol, allX) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const pad = 40;
+    const lineY = H / 2;
+
+    if (isSpecial) {
+      // All x or no solution
+      ctx.strokeStyle = '#E2E2E2';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad, lineY);
+      ctx.lineTo(W - pad, lineY);
+      ctx.stroke();
+
+      if (allX) {
+        ctx.strokeStyle = '#0A0A0A';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(pad, lineY);
+        ctx.lineTo(W - pad, lineY);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#AAAAAA';
+      ctx.font = '13px Inter, Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(allX ? 'semua x adalah solusi' : 'tidak ada solusi', W / 2, lineY + 28);
+      return;
+    }
+
+    // Dynamic range
+    const center = Math.round(val);
+    const range = 6;
+    const minVal = center - range;
+    const maxVal = center + range;
+    const lineW = W - pad * 2;
+
+    function xPos(v) {
+      return pad + ((v - minVal) / (maxVal - minVal)) * lineW;
+    }
+
+    // Base line
+    ctx.strokeStyle = '#E2E2E2';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad, lineY);
+    ctx.lineTo(W - pad, lineY);
+    ctx.stroke();
+
+    // Ticks
+    for (let i = minVal; i <= maxVal; i++) {
+      const x = xPos(i);
+      ctx.strokeStyle = '#E2E2E2';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, lineY - 6);
+      ctx.lineTo(x, lineY + 6);
+      ctx.stroke();
+
+      ctx.fillStyle = '#AAAAAA';
+      ctx.font = '11px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(i, x, lineY + 20);
+    }
+
+    // Solution area
+    const px = xPos(val);
+    const isLeft = sign === '<' || sign === '≤';
+    const inclusive = sign === '≤' || sign === '≥';
+
+    ctx.strokeStyle = '#0A0A0A';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    if (isLeft) {
+      ctx.moveTo(pad, lineY);
+      ctx.lineTo(px, lineY);
+    } else {
+      ctx.moveTo(px, lineY);
+      ctx.lineTo(W - pad, lineY);
+    }
+    ctx.stroke();
+
+    // Arrow at end
+    ctx.fillStyle = '#0A0A0A';
+    ctx.beginPath();
+    if (isLeft) {
+      ctx.moveTo(pad, lineY);
+      ctx.lineTo(pad + 8, lineY - 5);
+      ctx.lineTo(pad + 8, lineY + 5);
+    } else {
+      ctx.moveTo(W - pad, lineY);
+      ctx.lineTo(W - pad - 8, lineY - 5);
+      ctx.lineTo(W - pad - 8, lineY + 5);
+    }
+    ctx.fill();
+
+    // Circle at boundary
+    ctx.beginPath();
+    ctx.arc(px, lineY, 6, 0, Math.PI * 2);
+    if (inclusive) {
+      ctx.fillStyle = '#0A0A0A';
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      ctx.strokeStyle = '#0A0A0A';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    // Value label
+    ctx.fillStyle = '#0A0A0A';
+    ctx.font = 'bold 13px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(fmtNum(val), px, lineY - 14);
+  }
+
+  window.addEventListener('resize', update);
+  update();
+</script>
+
+</body>
+</html>
