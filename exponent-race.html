@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exponent Race — Loragica</title>
+<style>
+  :root {
+    --off-white: #F5F5F3;
+    --black: #0A0A0A;
+    --dark-gray: #1C1C1C;
+    --mid-gray: #555555;
+    --light-gray: #AAAAAA;
+    --grid-line: #E2E2E2;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--off-white);
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--dark-gray);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 600px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    padding: 36px;
+  }
+
+  .eyebrow { font-size: 11px; letter-spacing: 1px; color: var(--mid-gray); text-transform: uppercase; margin-bottom: 6px; }
+  h1 { font-size: 22px; font-weight: 500; color: var(--black); margin-bottom: 4px; }
+  .instruction { font-size: 13px; color: var(--mid-gray); line-height: 1.6; margin-bottom: 28px; }
+
+  /* Base selectors */
+  .bases { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+  .base-group { display: flex; align-items: center; gap: 10px; }
+
+  .base-label {
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    min-width: 14px; font-weight: 600;
+  }
+
+  .base-label-a { color: var(--black); }
+  .base-label-b { color: var(--mid-gray); }
+
+  .base-stepper {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--light-gray);
+  }
+
+  .base-stepper button {
+    font-family: 'Courier New', monospace;
+    font-size: 18px; font-weight: 700;
+    width: 32px; height: 32px;
+    border: none; background: transparent;
+    color: var(--dark-gray); cursor: pointer;
+  }
+
+  .base-stepper button:hover { background: var(--off-white); }
+
+  .base-stepper .base-val {
+    font-family: 'Courier New', monospace;
+    font-size: 20px; font-weight: 700;
+    width: 40px; text-align: center;
+    border-left: 1px solid var(--grid-line);
+    border-right: 1px solid var(--grid-line);
+    line-height: 32px;
+  }
+
+  .base-group-a .base-val { color: var(--black); }
+  .base-group-b .base-val { color: var(--mid-gray); }
+
+  .base-expr {
+    font-family: 'Courier New', monospace;
+    font-size: 14px; color: var(--light-gray);
+  }
+
+  /* N slider */
+  .n-control {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+    padding: 16px;
+    border: 1px solid var(--grid-line);
+  }
+
+  .n-label {
+    font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--mid-gray); min-width: 20px;
+  }
+
+  .n-control input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none; height: 2px; background: var(--light-gray); outline: none;
+  }
+
+  .n-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; background: var(--black); cursor: pointer;
+  }
+
+  .n-control input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px; background: var(--black); border: none; cursor: pointer;
+  }
+
+  .n-val {
+    font-family: 'Courier New', monospace;
+    font-size: 24px; font-weight: 700; color: var(--black);
+    min-width: 36px; text-align: center;
+  }
+
+  .play-btn {
+    font-size: 18px; width: 36px; height: 36px;
+    border: 1px solid var(--black); background: transparent;
+    color: var(--black); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .play-btn:hover { background: var(--black); color: var(--off-white); }
+
+  /* Race bars */
+  .race-area { margin-bottom: 24px; }
+
+  .race-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px; height: 52px;
+  }
+
+  .race-tag {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; min-width: 14px;
+  }
+
+  .race-tag-a { color: var(--black); }
+  .race-tag-b { color: var(--mid-gray); }
+
+  .bar-container {
+    flex: 1; height: 100%; position: relative;
+    background: var(--off-white);
+    overflow: hidden;
+  }
+
+  .bar {
+    height: 100%;
+    transition: width 0.3s ease;
+    display: flex; align-items: center;
+    padding-left: 12px;
+    min-width: 2px;
+  }
+
+  .bar-a { background: var(--black); }
+  .bar-b { background: var(--mid-gray); }
+
+  .bar-value {
+    font-family: 'Courier New', monospace;
+    font-size: 14px; font-weight: 700;
+    white-space: nowrap;
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+  }
+
+  .bar-value-inside { color: var(--off-white); }
+  .bar-value-outside { color: var(--dark-gray); }
+
+  /* Expressions */
+  .expr-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid var(--grid-line);
+  }
+
+  .expr-block {
+    font-family: 'Courier New', monospace;
+    font-size: 18px; font-weight: 700;
+  }
+
+  .expr-a { color: var(--black); }
+  .expr-b { color: var(--mid-gray); }
+
+  .ratio-block {
+    font-size: 13px; color: var(--light-gray);
+    text-align: center;
+  }
+
+  .ratio-value {
+    font-family: 'Courier New', monospace;
+    font-size: 15px; font-weight: 700;
+    color: var(--dark-gray);
+  }
+
+  /* Winner */
+  .winner {
+    text-align: center; padding-top: 12px;
+    border-top: 1px solid var(--grid-line);
+    font-size: 14px; font-weight: 500;
+    min-height: 30px;
+  }
+
+  @media (max-width: 480px) {
+    .bases { grid-template-columns: 1fr; }
+    .stage { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="eyebrow">Modul 1.1f — Playground</div>
+  <h1>Exponent Race</h1>
+  <p class="instruction">Atur basis masing-masing, lalu geser pangkat n atau tekan ▶ untuk melihat siapa tumbuh lebih cepat.</p>
+
+  <div class="bases">
+    <div class="base-group base-group-a">
+      <div class="base-label base-label-a">A</div>
+      <div class="base-stepper">
+        <button onclick="stepBase('a',-1)">−</button>
+        <div class="base-val" id="baseAVal">2</div>
+        <button onclick="stepBase('a',1)">+</button>
+      </div>
+      <div class="base-expr" id="baseAExpr">2ⁿ</div>
+    </div>
+    <div class="base-group base-group-b">
+      <div class="base-label base-label-b">B</div>
+      <div class="base-stepper">
+        <button onclick="stepBase('b',-1)">−</button>
+        <div class="base-val" id="baseBVal">3</div>
+        <button onclick="stepBase('b',1)">+</button>
+      </div>
+      <div class="base-expr" id="baseBExpr">3ⁿ</div>
+    </div>
+  </div>
+
+  <div class="n-control">
+    <div class="n-label">n</div>
+    <input type="range" id="nSlider" min="-4" max="10" step="1" value="0">
+    <div class="n-val" id="nVal">0</div>
+    <button class="play-btn" id="playBtn" title="Auto-play">▶</button>
+  </div>
+
+  <div class="race-area">
+    <div class="race-row">
+      <div class="race-tag race-tag-a">A</div>
+      <div class="bar-container" id="barContA">
+        <div class="bar bar-a" id="barA"></div>
+        <div class="bar-value" id="barValA">1</div>
+      </div>
+    </div>
+    <div class="race-row">
+      <div class="race-tag race-tag-b">B</div>
+      <div class="bar-container" id="barContB">
+        <div class="bar bar-b" id="barB"></div>
+        <div class="bar-value" id="barValB">1</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="expr-row">
+    <div class="expr-block expr-a" id="exprA">2⁰ = 1</div>
+    <div class="ratio-block">
+      <div>rasio</div>
+      <div class="ratio-value" id="ratioVal">1:1</div>
+    </div>
+    <div class="expr-block expr-b" id="exprB">3⁰ = 1</div>
+  </div>
+
+  <div class="winner" id="winner"></div>
+</div>
+
+<script>
+  let baseA = 2, baseB = 3;
+  let playing = false;
+  let playInterval = null;
+
+  const nSlider = document.getElementById('nSlider');
+  const playBtn = document.getElementById('playBtn');
+
+  function sup(n) {
+    const m = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+    return String(n).split('').map(c => m[c]||c).join('');
+  }
+
+  function fmtVal(v) {
+    if (v === 0) return '0';
+    if (Number.isInteger(v) && Math.abs(v) < 1e12) return v.toLocaleString();
+    if (Math.abs(v) >= 1) return Math.round(v).toLocaleString();
+    const inv = Math.round(1/v);
+    if (inv > 0 && Math.abs(v * inv - 1) < 0.001) return '1/' + inv.toLocaleString();
+    return v.toFixed(4);
+  }
+
+  function stepBase(which, dir) {
+    if (which === 'a') { baseA = Math.min(10, Math.max(1, baseA + dir)); }
+    else { baseB = Math.min(10, Math.max(1, baseB + dir)); }
+    update();
+  }
+
+  nSlider.addEventListener('input', update);
+
+  playBtn.addEventListener('click', () => {
+    if (playing) {
+      stopPlay();
+    } else {
+      startPlay();
+    }
+  });
+
+  function startPlay() {
+    playing = true;
+    playBtn.textContent = '■';
+    nSlider.value = -4;
+    update();
+    playInterval = setInterval(() => {
+      let n = parseInt(nSlider.value);
+      if (n >= 10) { stopPlay(); return; }
+      nSlider.value = n + 1;
+      update();
+    }, 600);
+  }
+
+  function stopPlay() {
+    playing = false;
+    playBtn.textContent = '▶';
+    clearInterval(playInterval);
+  }
+
+  function update() {
+    const n = parseInt(nSlider.value);
+    document.getElementById('nVal').textContent = n;
+
+    document.getElementById('baseAVal').textContent = baseA;
+    document.getElementById('baseBVal').textContent = baseB;
+    document.getElementById('baseAExpr').textContent = baseA + sup('n');
+    document.getElementById('baseBExpr').textContent = baseB + sup('n');
+
+    const vA = Math.pow(baseA, n);
+    const vB = Math.pow(baseB, n);
+    const maxV = Math.max(vA, vB, 0.001);
+
+    // Bar widths — relative to max (max = 100%)
+    const pctA = Math.max((vA / maxV) * 100, 0.5);
+    const pctB = Math.max((vB / maxV) * 100, 0.5);
+
+    const barA = document.getElementById('barA');
+    const barB = document.getElementById('barB');
+    barA.style.width = pctA + '%';
+    barB.style.width = pctB + '%';
+
+    // Value labels — inside if bar wide enough, outside otherwise
+    const barValA = document.getElementById('barValA');
+    const barValB = document.getElementById('barValB');
+    barValA.textContent = fmtVal(vA);
+    barValB.textContent = fmtVal(vB);
+
+    if (pctA > 25) {
+      barValA.className = 'bar-value bar-value-inside';
+      barValA.style.left = '12px'; barValA.style.right = '';
+    } else {
+      barValA.className = 'bar-value bar-value-outside';
+      barValA.style.left = (pctA + 1) + '%'; barValA.style.right = '';
+    }
+
+    if (pctB > 25) {
+      barValB.className = 'bar-value bar-value-inside';
+      barValB.style.left = '12px'; barValB.style.right = '';
+    } else {
+      barValB.className = 'bar-value bar-value-outside';
+      barValB.style.left = (pctB + 1) + '%'; barValB.style.right = '';
+    }
+
+    // Expressions
+    document.getElementById('exprA').textContent = baseA + sup(n) + ' = ' + fmtVal(vA);
+    document.getElementById('exprB').textContent = baseB + sup(n) + ' = ' + fmtVal(vB);
+
+    // Ratio
+    const ratioEl = document.getElementById('ratioVal');
+    if (vA === 0 || vB === 0) {
+      ratioEl.textContent = '—';
+    } else if (vA >= vB) {
+      const r = vA / vB;
+      ratioEl.textContent = r >= 1000 ? Math.round(r).toLocaleString() + '×' :
+                            r === 1 ? '1 : 1' :
+                            r.toFixed(1) + '×';
+    } else {
+      const r = vB / vA;
+      ratioEl.textContent = r >= 1000 ? Math.round(r).toLocaleString() + '×' :
+                            r === 1 ? '1 : 1' :
+                            r.toFixed(1) + '×';
+    }
+
+    // Winner
+    const w = document.getElementById('winner');
+    if (vA > vB) {
+      w.textContent = 'A lebih besar';
+      w.style.color = '#0A0A0A';
+    } else if (vB > vA) {
+      w.textContent = 'B lebih besar';
+      w.style.color = '#555555';
+    } else {
+      w.textContent = 'Seri';
+      w.style.color = '#AAAAAA';
+    }
+  }
+
+  update();
+</script>
+
+</body>
+</html>
